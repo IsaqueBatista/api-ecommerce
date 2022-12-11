@@ -2,6 +2,7 @@
 import * as Yup from 'yup'
 import Category from '../models/Category'
 import Product from '../models/Product'
+import Order from '../schemas/Order'
 
 class OrderController {
   async store (request, response) {
@@ -16,15 +17,13 @@ class OrderController {
         )
     })
 
-    console.log(request)
-
     try {
       await schema.validateSync(request.body, { abortEarly: false })
     } catch (err) {
       return response.status(400).json({ error: err.errors })
     }
 
-    const productsId = request.body.products.map(product => product.id)
+    const productsId = request.body.products.map((products) => products.id)
 
     const updatedProducts = await Product.findAll({
       where: {
@@ -40,7 +39,7 @@ class OrderController {
     })
 
     const editedProduct = updatedProducts.map((product) => {
-      const productIndex = request.body.products.findIndex(requestProduct => requestProduct.id === product.id)
+      const productIndex = request.body.products.findIndex((requestProduct) => requestProduct.id === product.id)
 
       const newProduct = {
         id: product.id,
@@ -59,10 +58,13 @@ class OrderController {
         id: request.userId,
         name: request.userName
       },
-      products: editedProduct
+      products: editedProduct,
+      status: 'Pedido realizado'
     }
 
-    return response.status(201).json(editedProduct)
+    const orderResponse = await Order.create(order)
+
+    return response.status(201).json(orderResponse)
   }
 }
 
